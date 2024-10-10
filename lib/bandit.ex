@@ -285,7 +285,10 @@ defmodule Bandit do
             Keyword.take(arg, [:ip])
             |> then(&(Keyword.get(thousand_island_options, :transport_options, []) ++ &1))
 
-          {ThousandIsland.Transports.TCP, transport_options, 4000}
+          transport_module =
+            Keyword.get(thousand_island_options, :transport_module, ThousandIsland.Transports.TCP)
+
+          {transport_module, transport_options, 4000}
 
         :https ->
           supported_protocols =
@@ -303,7 +306,10 @@ defmodule Bandit do
             end
             |> Enum.reject(&(is_tuple(&1) and elem(&1, 0) == :otp_app))
 
-          {ThousandIsland.Transports.SSL, transport_options, 4040}
+          transport_module =
+            Keyword.get(thousand_island_options, :transport_module, ThousandIsland.Transports.SSL)
+
+          {transport_module, transport_options, 4040}
       end
 
     port = Keyword.get(arg, :port, default_port) |> parse_as_number()
