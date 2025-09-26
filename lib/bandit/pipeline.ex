@@ -34,7 +34,13 @@ defmodule Bandit.Pipeline do
       {:ok, method, request_target, headers, transport} =
         Bandit.HTTPTransport.read_headers(transport)
 
+      {plug_module, plug_opts} = plug
+      {proxy_protocol_data, plug_opts} = Keyword.pop(plug_opts, :proxy_protocol_data, %{})
+
+      plug = {plug_module, plug_opts}
       conn = build_conn!(transport, method, request_target, headers, conn_data, opts)
+      conn = Plug.Conn.put_private(conn, :proxy_protocol_data, proxy_protocol_data)
+
       span = Bandit.Telemetry.start_span(:request, measurements, Map.put(metadata, :conn, conn))
 
       try do

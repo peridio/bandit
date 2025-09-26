@@ -42,12 +42,24 @@ defmodule Bandit.HTTP2.Connection do
 
   @spec init(ThousandIsland.Socket.t(), Bandit.Pipeline.plug_def(), map()) :: t()
   def init(socket, plug, opts) do
+    socket_socket = Map.get(socket, :socket, nil)
+
+    plug =
+      case {socket_socket, plug} do
+        {%{proxy_protocol_data: data}, {plug_module, plug_args}} ->
+          {plug_module, Keyword.put(plug_args, :proxy_protocol_data, data)}
+
+        _ ->
+          plug
+      end
+
     connection = %__MODULE__{
       local_settings:
         struct!(Bandit.HTTP2.Settings, Keyword.get(opts.http_2, :default_local_settings, [])),
       conn_data: Bandit.SocketHelpers.conn_data(socket),
       telemetry_span: ThousandIsland.Socket.telemetry_span(socket),
       plug: plug,
+      # TODO: consider adding the pp_data into this list
       opts: opts
     }
 
